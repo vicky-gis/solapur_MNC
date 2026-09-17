@@ -7,13 +7,13 @@
         <meta name="mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-capable" content="yes">
         <title>GeoTrack: Solapur City Web-GIS Dashboard</title>
-    
+        
         <link rel="stylesheet" href="css/leaflet.css">
         <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
         <link rel="stylesheet" href="css/qgis2web.css">
         <link rel="stylesheet" href="css/fontawesome-all.min.css">
         <link rel="stylesheet" href="css/leaflet.photon.css">
-        <!-- FontAwesome CDN for sidebar icons -->
+        <!-- FontAwesome CDN -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
         <style>
@@ -22,6 +22,7 @@
             padding: 0;
             box-sizing: border-box;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
 
         html, body {
@@ -30,7 +31,7 @@
             padding: 0;
             margin: 0;
             overflow: hidden;
-            background-color: #0d1527; /* Clean Dark Background */
+            background-color: #0d1527;
         }
 
         #map {
@@ -40,10 +41,56 @@
             top: 0;
             left: 0;
             z-index: 1;
-            background-color: #0f172a; /* Smooth dark map container background */
+            background-color: #0f172a;
         }
 
-        /* Dark Theme Sidebar Layout */
+        /* Mobile Menu Toggle Button */
+        .mobile-menu-btn {
+            display: none;
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            z-index: 1100;
+            background: #0d6efd;
+            color: #ffffff;
+            border: none;
+            outline: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: transform 0.2s ease;
+        }
+
+        .mobile-menu-btn:active {
+            transform: scale(0.92);
+        }
+
+        /* Backdrop Overlay for Mobile */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(2px);
+            z-index: 1150;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        /* Sidebar Layout */
         .sidebar {
             position: absolute;
             top: 0;
@@ -52,32 +99,39 @@
             width: 320px;
             background-color: #0b1326;
             color: #ffffff;
-            z-index: 1000;
+            z-index: 1200;
             display: flex;
             flex-direction: column;
             box-shadow: 4px 0 18px rgba(0, 0, 0, 0.45);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         /* Header */
         .sidebar-header {
             display: flex;
             align-items: center;
+            justify-content: space-between;
             padding: 16px;
-            gap: 12px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
             background: #080d1a;
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
         .sidebar-logo {
             background-color: #0d6efd;
             color: #ffffff;
-            width: 42px;
-            height: 42px;
+            width: 40px;
+            height: 40px;
             border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 19px;
             flex-shrink: 0;
         }
 
@@ -92,11 +146,23 @@
             color: #38bdf8;
         }
 
+        /* Mobile Close Button inside sidebar */
+        .sidebar-close-btn {
+            display: none;
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-size: 20px;
+            padding: 6px;
+            cursor: pointer;
+        }
+
         /* Layers Container */
         .layers-container {
             flex: 1;
             padding: 16px;
             overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         .section-title {
@@ -105,7 +171,7 @@
             text-transform: uppercase;
             letter-spacing: 1px;
             color: #94a3b8;
-            margin-bottom: 15px;
+            margin-bottom: 14px;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -120,22 +186,21 @@
             border-radius: 2px;
         }
 
-        /* Layer Item Cards */
+        /* Layer Items */
         .layer-item {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid #1e293b;
             border-radius: 8px;
-            padding: 11px 14px;
+            padding: 12px 14px;
             margin-bottom: 10px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            transition: all 0.2s ease;
+            transition: background 0.2s ease;
         }
 
         .layer-item:hover {
             background: rgba(255, 255, 255, 0.07);
-            border-color: #334155;
         }
 
         .layer-info {
@@ -153,7 +218,7 @@
         }
 
         .layer-text {
-            font-size: 13px;
+            font-size: 13.5px;
             font-weight: 500;
             color: #e2e8f0;
         }
@@ -162,8 +227,8 @@
         .switch {
             position: relative;
             display: inline-block;
-            width: 36px;
-            height: 20px;
+            width: 40px;
+            height: 22px;
             flex-shrink: 0;
         }
 
@@ -178,19 +243,19 @@
             cursor: pointer;
             top: 0; left: 0; right: 0; bottom: 0;
             background-color: #334155;
-            transition: .3s;
-            border-radius: 20px;
+            transition: .25s;
+            border-radius: 22px;
         }
 
         .slider:before {
             position: absolute;
             content: "";
-            height: 14px;
-            width: 14px;
+            height: 16px;
+            width: 16px;
             left: 3px;
             bottom: 3px;
             background-color: white;
-            transition: .3s;
+            transition: .25s;
             border-radius: 50%;
         }
 
@@ -199,10 +264,10 @@
         }
 
         input:checked + .slider:before {
-            transform: translateX(16px);
+            transform: translateX(18px);
         }
 
-        /* Footer Credits */
+        /* Footer */
         .sidebar-footer {
             padding: 12px 16px;
             font-size: 11px;
@@ -212,22 +277,80 @@
             background: #080d1a;
         }
 
-        /* Reposition Zoom Control next to Sidebar */
+        /* Desktop Zoom Position */
         .leaflet-left {
             left: 335px !important;
+            transition: left 0.3s ease;
+        }
+
+        /* ---------------- MOBILE RESPONSIVE QUERIES ---------------- */
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%); /* मोबाईलवर डीफॉल्ट लपवून ठेवणे */
+                width: 82%;
+                max-width: 320px;
+            }
+
+            .sidebar.open {
+                transform: translateX(0); /* बटणावर क्लिक केल्यावर ओपन होईल */
+            }
+
+            .sidebar-close-btn {
+                display: block;
+            }
+
+            /* मोबाईलवर झूम कंट्रोल्स उजव्या बाजूला हलवणे */
+            .leaflet-left {
+                left: unset !important;
+                right: 15px !important;
+                top: 15px !important;
+            }
+
+            .leaflet-control-zoom {
+                border: none !important;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.4) !important;
+            }
+
+            .leaflet-control-zoom a {
+                background-color: #0b1326 !important;
+                color: #ffffff !important;
+                border-bottom: 1px solid #1e293b !important;
+                width: 38px !important;
+                height: 38px !important;
+                line-height: 38px !important;
+                border-radius: 8px !important;
+            }
         }
         </style>
     </head>
     <body>
-        <!-- Custom UI Sidebar -->
-        <div class="sidebar">
+        <!-- Floating Mobile Menu Button -->
+        <button class="mobile-menu-btn" id="menuBtn" onclick="toggleSidebar()" aria-label="Toggle Layers">
+            <i class="fa-solid fa-layer-group"></i>
+        </button>
+
+        <!-- Dark Backdrop Overlay for Mobile -->
+        <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+        <!-- Sidebar UI -->
+        <div class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <div class="sidebar-logo">
-                    <i class="fa-solid fa-globe"></i>
+                <div class="header-brand">
+                    <div class="sidebar-logo">
+                        <i class="fa-solid fa-globe"></i>
+                    </div>
+                    <div class="sidebar-title">
+                        <h2>GeoTrack: <span>Solapur City</span><br>Web-GIS Portal</h2>
+                    </div>
                 </div>
-                <div class="sidebar-title">
-                    <h2>GeoTrack: <span>Solapur City</span><br>Web-GIS Portal</h2>
-                </div>
+                <!-- Close Button for Mobile -->
+                <button class="sidebar-close-btn" onclick="toggleSidebar()" aria-label="Close Sidebar">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
             </div>
 
             <div class="layers-container">
@@ -236,7 +359,7 @@
                 <!-- 1. Railways -->
                 <div class="layer-item">
                     <div class="layer-info">
-                        <span class="legend-indicator" style="background-color: #624000; height: 4px;"></span>
+                        <span class="legend-indicator" style="background-color: #ffa500; height: 4px;"></span>
                         <span class="layer-text">Railways</span>
                     </div>
                     <label class="switch">
@@ -411,7 +534,7 @@
             return {
                 pane: 'pane_solapur_city_0',
                 opacity: 1,
-                color: '#ffffff', // डार्क बॅकग्राउंडवर स्पष्ट दिसण्यासाठी पांढरी बॉर्डर
+                color: '#ffffff',
                 dashArray: '',
                 lineCap: 'butt',
                 lineJoin: 'miter',
@@ -596,7 +719,7 @@
         bounds_group.addLayer(layer_railways_li_6);
         map.addLayer(layer_railways_li_6);
 
-        // Sidebar Toggle Handler
+        // Sidebar Toggle Handler for Layers
         function toggleMapLayer(layer, isVisible) {
             if (isVisible) {
                 if (!map.hasLayer(layer)) {
@@ -607,6 +730,14 @@
                     map.removeLayer(layer);
                 }
             }
+        }
+
+        // Mobile Drawer Toggle (Open / Close)
+        function toggleSidebar() {
+            var sidebar = document.getElementById('sidebar');
+            var overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
         }
 
         setBounds();
